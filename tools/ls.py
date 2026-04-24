@@ -1,21 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-
+from agent.project_paths import PROJECT_ROOT, resolve_project_path
 from agent.tool_api import JsonDict, tool
 
 
-PROJECT_ROOT = Path.cwd().resolve()
 MAX_ENTRIES = 200
-
-
-def _resolve_project_path(raw_path: str) -> Path:
-    candidate = (PROJECT_ROOT / raw_path).resolve()
-    try:
-        candidate.relative_to(PROJECT_ROOT)
-    except ValueError as exc:
-        raise ValueError("path must stay within the project directory") from exc
-    return candidate
 
 
 @tool(
@@ -40,7 +29,7 @@ def ls(arguments: JsonDict) -> JsonDict:
     raw_path = str(arguments.get("path", ".")).strip() or "."
     include_hidden = bool(arguments.get("include_hidden", False))
 
-    path = _resolve_project_path(raw_path)
+    path = resolve_project_path(raw_path)
     if not path.exists():
         raise FileNotFoundError(f"path not found: {raw_path}")
     if not path.is_dir():

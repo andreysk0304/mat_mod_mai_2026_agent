@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from agent.agent import AgentRuntime
 from agent.client import OpenAICompatibleError
+from agent.project_paths import PROJECT_SKILLS_DIR, PROJECT_TOOLS_DIR
 from agent.skills import SkillRegistry
 from agent.terminal_markdown import render_markdown
 from agent.tools import ToolRegistry
@@ -30,8 +30,8 @@ HELP_TEXT = """
 """
 
 
-TOOLS_DIR = Path("tools")
-SKILLS_DIR = Path("skills")
+TOOLS_DIR = PROJECT_TOOLS_DIR
+SKILLS_DIR = PROJECT_SKILLS_DIR
 
 
 def build_runtime() -> AgentRuntime:

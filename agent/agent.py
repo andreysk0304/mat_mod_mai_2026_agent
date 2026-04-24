@@ -8,6 +8,7 @@ from agent.client import OpenAICompatibleClient
 from agent.config import Settings
 from agent.logger import AgentLogger, DEFAULT_LOG_STAGES
 from agent.memory import ConversationMemory
+from agent.project_paths import PROJECT_SKILLS_DIR, PROJECT_TOOLS_DIR
 from agent.skills import SkillRegistry
 from agent.tools import ToolRegistry
 from agent.types import AgentResponse, ChatMessage, JsonDict, TokenUsage
@@ -198,8 +199,8 @@ class AgentRuntime:
             settings=settings,
             client=OpenAICompatibleClient(settings),
             memory=ConversationMemory(),
-            tools=ToolRegistry.with_defaults(tools_dir=tools_dir),
-            skills=SkillRegistry.with_defaults(skills_dir=skills_dir),
+            tools=ToolRegistry.with_defaults(tools_dir=tools_dir or PROJECT_TOOLS_DIR),
+            skills=SkillRegistry.with_defaults(skills_dir=skills_dir or PROJECT_SKILLS_DIR),
             logger=AgentLogger(
                 enabled=settings.log_enabled,
                 stages=set(settings.log_stages or DEFAULT_LOG_STAGES),

@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from agent.project_paths import PROJECT_ENV_FILE
+
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -47,12 +49,12 @@ class Settings:
     temperature: float = 0.2
     max_tool_rounds: int = 4
     system_prompt: str = (
-        "You are a practical CLI AI agent for repository analysis and planning. "
-        "Use github_repo_info when the user asks about a GitHub repository. "
-        "Use plan_optimizer when the user asks to allocate limited time or budget across tasks. "
-        "Use tools when they help produce a more accurate answer, and explain the result concisely. "
-        "Format structured answers in Markdown: use tables for comparisons, bullet lists for plans, "
-        "and bold text for key conclusions."
+        "Ты практичный консольный AI-агент для анализа репозиториев и планирования. "
+        "Используй github_repo_info, когда пользователь спрашивает о GitHub-репозитории. "
+        "Используй plan_optimizer, когда пользователь просит распределить ограниченное время "
+        "или бюджет между задачами. Используй инструменты, когда они помогают дать более точный "
+        "ответ, и объясняй результат кратко. Форматируй структурированные ответы в Markdown: "
+        "используй таблицы для сравнений, списки для планов и жирный текст для ключевых выводов."
     )
     ssl_verify: bool = True
     ca_bundle: str | None = None
@@ -62,7 +64,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        load_dotenv()
+        load_dotenv(PROJECT_ENV_FILE)
         defaults = cls()
         return cls(
             model=os.getenv("AI_AGENT_MODEL", defaults.model),

@@ -1,20 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
-
+from agent.project_paths import PROJECT_ROOT, resolve_project_path
 from agent.tool_api import JsonDict, tool
-
-
-PROJECT_ROOT = Path.cwd().resolve()
-
-
-def _resolve_project_path(raw_path: str) -> Path:
-    candidate = (PROJECT_ROOT / raw_path).resolve()
-    try:
-        candidate.relative_to(PROJECT_ROOT)
-    except ValueError as exc:
-        raise ValueError("path must stay within the project directory") from exc
-    return candidate
 
 
 @tool(
@@ -58,7 +45,7 @@ def write_project_file(arguments: JsonDict) -> JsonDict:
     if mode not in {"overwrite", "append"}:
         raise ValueError("mode must be overwrite or append")
 
-    path = _resolve_project_path(raw_path)
+    path = resolve_project_path(raw_path)
     if bool(arguments.get("create_dirs")):
         path.parent.mkdir(parents=True, exist_ok=True)
     elif not path.parent.exists():
