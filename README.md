@@ -1,65 +1,120 @@
-# Minimal Python AI Agent
+# Агент, который может дописывать сам себя
 
-Минимальный CLI-агент с in-memory историей диалога, OpenAI-compatible API и расширением через tools и skills.
+Небольшой CLI-агент на Python с памятью текущего диалога, поддержкой OpenAI-compatible API, tools и skills.
+
+Главная идея проекта простая: это не просто чат в терминале. Агент умеет смотреть на структуру проекта, читать файлы, создавать новые и изменять существующие. То есть его можно использовать не только для ответов, но и для работы над самим проектом.
+
+## Что это за проект
+
+Этот репозиторий содержит минимального, но уже полезного AI-агента:
+
+- он работает в CLI
+- хранит историю текущей сессии в памяти
+- отправляет запросы в OpenAI-compatible `/chat/completions`
+- умеет вызывать инструменты
+- умеет подключать дополнительные инструкции через skills
+
+Проект сделан маленьким и понятным, чтобы его можно было быстро расширять.
+
+## Что значит "сам себя дописывает"
+
+Здесь это означает не магию, а конкретные возможности:
+
+- агент может посмотреть содержимое папок проекта
+- агент может читать текстовые файлы
+- агент может создавать файлы
+- агент может перезаписывать файлы или дописывать текст в конец
+
+Например, ему можно поручить:
+
+- добавить новый tool
+- переписать README
+- создать skill
+- сделать конфиг или шаблонный файл
+
+Все эти действия он может выполнить через свои инструменты внутри проекта.
+
+## Как это работает
+
+Во время запроса рантайм:
+
+1. собирает системный промпт, активные skills и историю сообщений
+2. передаёт модели список доступных tools
+3. вызывает нужный инструмент, если модель решила им воспользоваться
+4. возвращает результат tool-вызова обратно в диалог
+5. повторяет цикл, пока модель не даст обычный ответ
+
+За счёт этого агент может не только описать решение, но и реально изменить файлы проекта.
+
+## Доступные инструменты
+
+Сейчас в проекте есть:
+
+- `calculate` — считает арифметические выражения
+- `get_current_time` — показывает локальное время процесса
+- `ls` — показывает файлы и папки внутри проекта
+- `read_project_file` — читает текстовые файлы проекта
+- `write_project_file` — создаёт, перезаписывает и дописывает файлы проекта
+
+Именно `ls`, `read_project_file` и `write_project_file` дают агенту возможность работать с собственным проектом.
+
+## Ограничения
+
+Самоизменение сделано с ограничениями:
+
+- работа идёт только внутри директории проекта
+- чтение и запись рассчитаны на текстовые UTF-8 файлы
+- запись поддерживает режимы `overwrite` и `append`
+- полного доступа к произвольным shell-командам у агента нет
+
+## Структура проекта
+
+- `main.py` — входная точка
+- `agent/cli.py` — CLI-цикл и команды
+- `agent/agent.py` — основной цикл работы агента и tools
+- `agent/client.py` — клиент для OpenAI-compatible API
+- `agent/memory.py` — история текущей сессии
+- `agent/tools.py` — загрузка и реестр tools
+- `agent/tool_api.py` — API для объявления новых tools
+- `agent/skills.py` — загрузка и реестр skills
+- `tools/` — инструменты агента
+- `skills/` — дополнительные текстовые инструкции
 
 ## Запуск
 
 ```bash
 cp .env.example .env
-# затем заполнить .env
 python3 main.py
 ```
 
-Если `.env` не используется автоматически, проверь, что установлен `python-dotenv`.
+После этого нужно заполнить `.env`.
 
 ## Команды CLI
 
-- `/help`
-- `/exit`
-- `/reset`
-- `/reload`
-- `/log status`
-- `/log on`
-- `/log off`
-- `/log enable STAGES`
-- `/log disable STAGES`
-- `/history`
-- `/tools`
-- `/skills`
-- `/skill enable NAME`
-- `/skill disable NAME`
+- `/help` — список команд
+- `/exit` — выход
+- `/reset` — очистить историю
+- `/reload` — заново загрузить tools и skills
+- `/log status` — статус логирования
+- `/log on` — включить логирование
+- `/log off` — выключить логирование
+- `/log enable STAGES` — включить выбранные стадии логов
+- `/log disable STAGES` — выключить выбранные стадии логов
+- `/history` — показать историю сообщений
+- `/tools` — показать список tools
+- `/skills` — показать список skills
+- `/skill enable NAME` — включить skill
+- `/skill disable NAME` — выключить skill
 
-## Архитектура
-
-- `main.py` — entrypoint.
-- `agent/cli.py` — CLI loop и runtime commands.
-- `agent/agent.py` — orchestration: system prompt, tool loop, memory integration.
-- `agent/client.py` — HTTP client для OpenAI-compatible `/chat/completions`.
-- `agent/memory.py` — in-memory история текущей CLI-сессии.
-- `agent/tools.py` — registry tools и загрузка Python tool modules из `tools/`.
-- `agent/tool_api.py` — стабильный API для пользовательских tool-файлов.
-- `agent/skills.py` — registry skills и загрузка markdown skills из `skills/`.
-- `tools/*.py` — Python tools, которые подхватываются автоматически при старте.
-- `skills/*.md` — prompt fragments, которые можно включать в рантайме.
-
-По умолчанию в проекте уже есть tools для:
-
-- арифметики (`calculate`)
-- текущего времени (`get_current_time`)
-- просмотра директорий проекта (`ls`)
-- чтения текстовых файлов проекта (`read_project_file`)
-- записи и дописывания текстовых файлов проекта (`write_project_file`)
+`/reload` полезен, если в проект были добавлены новые tools или skills без перезапуска процесса.
 
 ## Как расширять
 
 ### Добавить новый tool
 
-1. Создать `tools/<name>.py`.
-2. Экспортировать tool одним из способов:
-   `@tool(...) def handler(...): ...`
-   или `TOOL = ToolDefinition(...)`
-   или `def register(registry): registry.register(...)`
-3. Выполнить `/reload` или перезапустить CLI.
+1. Создать файл `tools/<name>.py`
+2. Объявить tool через `@tool(...)` или `ToolDefinition`
+3. Выполнить `/reload`
 
 Пример:
 
@@ -69,10 +124,12 @@ from agent.tool_api import JsonDict, tool
 
 @tool(
     name="echo",
-    description="Return text as-is.",
+    description="Вернуть текст без изменений.",
     parameters={
         "type": "object",
-        "properties": {"text": {"type": "string"}},
+        "properties": {
+            "text": {"type": "string"}
+        },
         "required": ["text"],
         "additionalProperties": False,
     },
@@ -81,30 +138,17 @@ def echo(arguments: JsonDict) -> JsonDict:
     return {"text": arguments["text"]}
 ```
 
-### Self-edit tools
-
-- `read_project_file` читает UTF-8 текстовый файл внутри текущего проекта.
-- `write_project_file` умеет полностью перезаписывать файл или дописывать текст в конец.
-- Оба инструмента запрещают выход за пределы рабочей директории проекта.
-- После добавления новых tool-файлов выполните `/reload`.
-
 ### Добавить новый skill
 
-1. Создать `skills/<name>.md`.
-2. Запустить CLI.
-3. Включить skill командой `/skill enable <name>`.
-
-## TLS/SSL
-
-- По умолчанию клиент проверяет TLS-сертификаты.
-- Если локальный Python не видит CA, можно указать `AI_AGENT_CA_BUNDLE=/path/to/ca.pem`.
-- Для временной локальной отладки можно выставить `AI_AGENT_SSL_VERIFY=false`.
-- `AI_AGENT_SSL_VERIFY=false` отключает проверку сертификатов и не подходит для production.
+1. Создать `skills/<name>.md`
+2. Выполнить `/skill enable <name>`
 
 ## Логирование
 
-- `AI_AGENT_LOG_ENABLED=true` включает логирование.
-- `AI_AGENT_LOG_STAGES=input,prompt,output,usage,tools,errors` задаёт стадии.
-- `prompt` показывает полный payload, который уходит в модель.
-- `AI_AGENT_LOG_FILE=./logs/agent.log` пишет логи в файл. Без этого логи идут в `stdout`.
-- `usage` логирует токены на каждой upstream-итерации и суммарно на одну пользовательскую задачу.
+- `AI_AGENT_LOG_ENABLED=true` включает логирование
+- `AI_AGENT_LOG_STAGES=input,prompt,output,usage,tools,errors` задаёт стадии
+- `AI_AGENT_LOG_FILE=./logs/agent.log` пишет логи в файл
+
+Логи полезны, если нужно посмотреть, какие tools вызывал агент и какой запрос уходил в модель.
+
+P.S. Эту ридмишку он тоже может редактировать и дописывать сам :D
