@@ -2,8 +2,24 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(path: str | os.PathLike[str] = ".env") -> None:
+        env_path = Path(path)
+        if not env_path.exists():
+            return
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip("'\"")
+            if key and key not in os.environ:
+                os.environ[key] = value
 
 
 def _parse_bool(raw_value: str | None, default: bool) -> bool:
@@ -31,11 +47,12 @@ class Settings:
     temperature: float = 0.2
     max_tool_rounds: int = 4
     system_prompt: str = (
-        "You are a helpful CLI AI agent. "
-        "Use tools when they help produce a more accurate answer. "
-        "When available, you may inspect and modify project files to complete the task. "
-        "Keep edits minimal and stay within the current project directory. "
-        "Keep responses concise and practical."
+        "You are a practical CLI AI agent for repository analysis and planning. "
+        "Use github_repo_info when the user asks about a GitHub repository. "
+        "Use plan_optimizer when the user asks to allocate limited time or budget across tasks. "
+        "Use tools when they help produce a more accurate answer, and explain the result concisely. "
+        "Format structured answers in Markdown: use tables for comparisons, bullet lists for plans, "
+        "and bold text for key conclusions."
     )
     ssl_verify: bool = True
     ca_bundle: str | None = None

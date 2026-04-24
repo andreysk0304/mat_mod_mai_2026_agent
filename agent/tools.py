@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -60,8 +61,10 @@ class ToolRegistry:
 
         module = importlib.util.module_from_spec(spec)
         try:
+            sys.modules[module_name] = module
             spec.loader.exec_module(module)
         except Exception as exc:
+            sys.modules.pop(module_name, None)
             raise ToolLoadError(f"Failed to load tool module {path.name}: {exc}") from exc
         return module
 

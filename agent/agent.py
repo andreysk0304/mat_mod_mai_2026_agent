@@ -36,10 +36,23 @@ class AgentRuntime:
         tool_uses: list[str] = []
         request_usages: list[TokenUsage] = []
         total_usage = TokenUsage()
+        tool_rounds = 0
 
-        for iteration in range(1, self.settings.max_tool_rounds + 2):
+        for iteration in range(1, self.settings.max_tool_rounds + 3):
+            force_final_answer = tool_rounds >= self.settings.max_tool_rounds
             messages = self._full_conversation()
-            tools = self.tools.list_for_api()
+            if force_final_answer:
+                messages = [
+                    *messages,
+                    ChatMessage(
+                        role="system",
+                        content=(
+                            "Tool call limit reached. Do not call tools again. "
+                            "Use the tool results already present in the conversation and give the best final answer."
+                        ),
+                    ).to_api_dict(),
+                ]
+            tools = [] if force_final_answer else self.tools.list_for_api()
             self.logger.log(
                 "prompt",
                 self._format_prompt_payload(
@@ -67,7 +80,7 @@ class AgentRuntime:
             message = response["choices"][0]["message"]
             tool_calls = message.get("tool_calls") or []
 
-            if tool_calls:
+            if tool_calls and tools:
                 self.memory.add(
                     ChatMessage(
                         role="assistant",
@@ -99,9 +112,15 @@ class AgentRuntime:
                         )
                     )
                 self.memory.extend(executed_messages)
+                tool_rounds += 1
                 continue
 
             text = message.get("content") or ""
+            if tool_calls and not tools:
+                text = text or (
+                    "Достигнут лимит вызовов инструментов. Не удалось получить финальный текст от модели, "
+                    "но предыдущие результаты инструментов уже добавлены в историю диалога."
+                )
             self.memory.add(ChatMessage(role="assistant", content=text))
             self.logger.log("output", f"assistant: {text}")
             self.logger.log(
@@ -120,7 +139,14 @@ class AgentRuntime:
                 total_usage=total_usage,
             )
 
-        raise RuntimeError("Tool loop limit reached")
+        text = "Достигнут лимит вызовов инструментов, и модель не вернула финальный ответ."
+        self.memory.add(ChatMessage(role="assistant", content=text))
+        return AgentResponse(
+            text=text,
+            tool_uses=tool_uses,
+            request_usages=request_usages,
+            total_usage=total_usage,
+        )
 
     @staticmethod
     def _parse_tool_arguments(raw_arguments: str) -> JsonDict:

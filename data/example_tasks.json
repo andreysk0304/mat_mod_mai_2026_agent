@@ -1,0 +1,48 @@
+{
+  "scenario": "Подготовка мини-хака AI-агента за один вечер",
+  "available_hours": 8,
+  "tasks": [
+    {
+      "id": "readme",
+      "title": "Переписать README и инструкцию запуска",
+      "hours": 1,
+      "value": 3
+    },
+    {
+      "id": "github_tool",
+      "title": "Добавить tool для GitHub API",
+      "hours": 4,
+      "value": 10
+    },
+    {
+      "id": "optimizer_tool",
+      "title": "Добавить optimizer tool с baseline и improved",
+      "hours": 4,
+      "value": 10
+    },
+    {
+      "id": "reflection",
+      "title": "Написать REFLECTION.md",
+      "hours": 1,
+      "value": 3
+    },
+    {
+      "id": "screencast",
+      "title": "Записать скринкаст 60-90 секунд",
+      "hours": 3,
+      "value": 8
+    },
+    {
+      "id": "polish",
+      "title": "Вычистить CLI-тексты и мелкие UX-шероховатости",
+      "hours": 1,
+      "value": 3
+    },
+    {
+      "id": "tests",
+      "title": "Добавить автотесты для tools",
+      "hours": 3,
+      "value": 6
+    }
+  ]
+}

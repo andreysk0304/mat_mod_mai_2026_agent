@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from agent.agent import AgentRuntime
 from agent.client import OpenAICompatibleError
 from agent.skills import SkillRegistry
+from agent.terminal_markdown import render_markdown
 from agent.tools import ToolRegistry
 
 
@@ -13,7 +15,7 @@ HELP_TEXT = """
 Команды:
 /help                 Показать команды
 /exit                 Закрыть агента
-/reset                Очистить истори чата
+/reset                Очистить историю чата
 /reload               Перезагрузить tools и skills с диска
 /log status           Показать статус логирования
 /log on               Включить логирование
@@ -111,7 +113,7 @@ def handle_command(runtime: AgentRuntime, command: str) -> bool:
 
 def run_cli() -> int:
     runtime = build_runtime()
-    print("Мини-агентик на коленке :)\n\nИспользуйте /help для просмотра команд.")
+    print("AI-агент для анализа репозиториев и планирования.\n\nИспользуйте /help для просмотра команд.")
     while True:
         try:
             raw = input(">>> ").strip()
@@ -137,13 +139,13 @@ def run_cli() -> int:
             print(f"runtime error: {exc}", flush=True)
             continue
 
-        print(response.text, flush=True)
+        print(render_markdown(response.text, enable_ansi=sys.stdout.isatty()), flush=True)
         if response.tool_uses:
             print(f"[tools: {', '.join(response.tool_uses)}]", flush=True)
     return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Мини-агентик на коленке :)")
+    parser = argparse.ArgumentParser(description="AI-агент для анализа репозиториев и планирования.")
     parser.parse_args()
     return run_cli()
