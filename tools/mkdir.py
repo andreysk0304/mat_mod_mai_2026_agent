@@ -1,20 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
-
+from agent.project_paths import PROJECT_ROOT, resolve_project_path
 from agent.tool_api import JsonDict, tool
-
-
-PROJECT_ROOT = Path.cwd().resolve()
-
-
-def _resolve_project_path(raw_path: str) -> Path:
-    candidate = (PROJECT_ROOT / raw_path).resolve()
-    try:
-        candidate.relative_to(PROJECT_ROOT)
-    except ValueError as exc:
-        raise ValueError("path must stay within the project directory") from exc
-    return candidate
 
 
 @tool(
@@ -44,7 +31,7 @@ def mkdir(arguments: JsonDict) -> JsonDict:
     if not raw_path:
         raise ValueError("path cannot be empty")
 
-    path = _resolve_project_path(raw_path)
+    path = resolve_project_path(raw_path)
 
     if path.exists():
         if path.is_dir():

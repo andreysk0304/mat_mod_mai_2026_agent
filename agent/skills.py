@@ -41,10 +41,10 @@ class SkillRegistry:
         registry.register(
             SkillDefinition(
                 name="default-python",
-                description="Bias responses toward practical Python implementation details.",
+                description="Настраивает ответы на практичные детали реализации на Python.",
                 prompt=(
-                    "When writing Python code, prefer small modules, type hints, "
-                    "simple dataclasses, and practical CLI-first solutions."
+                    "Когда пишешь код на Python, предпочитай небольшие модули, type hints, "
+                    "простые dataclass и практичные решения для консольного приложения."
                 ),
             )
         )
@@ -60,4 +60,3 @@ class SkillRegistry:
                     )
                 )
         return registry
-

@@ -6,13 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib import error, request
 
+import certifi
+
 from agent.config import Settings
 from agent.types import JsonDict
-
-try:
-    import certifi
-except ImportError:
-    certifi = None
 
 
 class OpenAICompatibleError(RuntimeError):
@@ -67,7 +64,4 @@ class OpenAICompatibleClient:
             ca_bundle_path = Path(self.settings.ca_bundle).expanduser()
             return ssl.create_default_context(cafile=str(ca_bundle_path))
 
-        if certifi is not None:
-            return ssl.create_default_context(cafile=certifi.where())
-
-        return ssl.create_default_context()
+        return ssl.create_default_context(cafile=certifi.where())

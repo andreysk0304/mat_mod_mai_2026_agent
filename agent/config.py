@@ -2,26 +2,9 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
 from agent.project_paths import PROJECT_ENV_FILE
-
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    def load_dotenv(path: str | os.PathLike[str] = ".env") -> None:
-        env_path = Path(path)
-        if not env_path.exists():
-            return
-        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
-            line = raw_line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            key = key.strip()
-            value = value.strip().strip("'\"")
-            if key and key not in os.environ:
-                os.environ[key] = value
+from dotenv import load_dotenv
 
 
 def _parse_bool(raw_value: str | None, default: bool) -> bool:

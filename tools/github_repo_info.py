@@ -7,12 +7,9 @@ import re
 import ssl
 from urllib import error, parse, request
 
-from agent.tool_api import JsonDict, tool
+import certifi
 
-try:
-    import certifi
-except ImportError:
-    certifi = None
+from agent.tool_api import JsonDict, tool
 
 
 GITHUB_API_BASE = "https://api.github.com"
@@ -59,9 +56,7 @@ def _build_ssl_context() -> ssl.SSLContext:
     ca_bundle = os.getenv("GITHUB_CA_BUNDLE", "").strip()
     if ca_bundle:
         return ssl.create_default_context(cafile=ca_bundle)
-    if certifi is not None:
-        return ssl.create_default_context(cafile=certifi.where())
-    return ssl.create_default_context()
+    return ssl.create_default_context(cafile=certifi.where())
 
 
 @tool(
